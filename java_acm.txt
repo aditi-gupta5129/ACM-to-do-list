@@ -1,0 +1,166 @@
+import java.util.*;
+
+class Task {
+    String description;
+    boolean important;
+    boolean done;
+
+    Task(String description, boolean important) {
+        this.description = description;
+        this.important = important;
+        this.done = false;
+    }
+
+    @Override
+    public String toString() {
+        return (important ? "*" : "") + description +
+               (done ? " [DONE]" : " [PENDING]");
+    }
+}
+
+public class DailyTaskManager {
+    static Map<String, ArrayList<Task>> taskMap = new HashMap<>();
+    static Scanner sc = new Scanner(System.in);
+    static String currentDate;
+
+    public static void main(String[] args) {
+        // Ask for today's date at start
+        System.out.print("Enter today's date (YYYY-MM-DD): ");
+        currentDate = sc.nextLine();
+
+        System.out.println("=== Daily Task Manager for " + currentDate + " ===");
+
+        while (true) {
+            System.out.println("\n--- You are viewing: " + currentDate + " ---");
+            System.out.println("1. Add Task");
+            System.out.println("2. View Tasks");
+            System.out.println("3. Mark Task as Done");
+            System.out.println("4. Delete Task");
+            System.out.println("5. Move Pending Tasks to Next Day");
+            System.out.println("6. Change Current Date");
+            System.out.println("7. View All Dates & Tasks");
+            System.out.println("8. Exit");
+
+            System.out.print("Enter your choice: ");
+            int choice = sc.nextInt();
+            sc.nextLine(); // consume newline
+
+            switch (choice) {
+                case 1 -> addTask();
+                case 2 -> viewTasks();
+                case 3 -> markTaskDone();
+                case 4 -> deleteTask();
+                case 5 -> moveTasks();
+                case 6 -> changeDate();
+                case 7 -> viewAllDates();
+                case 8 -> {
+                    System.out.println("Goodbye!");
+                    return;
+                }
+                default -> System.out.println("Invalid choice!");
+            }
+        }
+    }
+
+    static void addTask() {
+        System.out.print("Enter task: ");
+        String desc = sc.nextLine();
+        System.out.print("Mark as important? (y/n): ");
+        boolean important = sc.nextLine().equalsIgnoreCase("y");
+
+        taskMap.putIfAbsent(currentDate, new ArrayList<>());
+        taskMap.get(currentDate).add(new Task(desc, important));
+        System.out.println("Task added for " + currentDate);
+    }
+
+    static void viewTasks() {
+        if (!taskMap.containsKey(currentDate) || taskMap.get(currentDate).isEmpty()) {
+            System.out.println("No tasks for " + currentDate);
+            return;
+        }
+
+        System.out.println("Tasks for " + currentDate + ":");
+        ArrayList<Task> tasks = taskMap.get(currentDate);
+        for (int i = 0; i < tasks.size(); i++) {
+            System.out.println((i+1) + ". " + tasks.get(i));
+        }
+    }
+
+    static void markTaskDone() {
+        if (!taskMap.containsKey(currentDate) || taskMap.get(currentDate).isEmpty()) {
+            System.out.println("No tasks for " + currentDate);
+            return;
+        }
+
+        viewTasks();
+        System.out.print("Enter task number to mark as done: ");
+        int num = sc.nextInt(); sc.nextLine();
+        if (num > 0 && num <= taskMap.get(currentDate).size()) {
+            taskMap.get(currentDate).get(num-1).done = true;
+            System.out.println("Task marked as DONE.");
+        } else {
+            System.out.println("Invalid number!");
+        }
+    }
+
+    static void deleteTask() {
+        if (!taskMap.containsKey(currentDate) || taskMap.get(currentDate).isEmpty()) {
+            System.out.println("No tasks for " + currentDate);
+            return;
+        }
+
+        viewTasks();
+        System.out.print("Enter task number to delete: ");
+        int num = sc.nextInt(); sc.nextLine();
+        if (num > 0 && num <= taskMap.get(currentDate).size()) {
+            Task removed = taskMap.get(currentDate).remove(num-1);
+            System.out.println("Removed: " + removed.description);
+        } else {
+            System.out.println("Invalid number!");
+        }
+    }
+
+    static void moveTasks() {
+        System.out.print("Enter next date (YYYY-MM-DD): ");
+        String toDate = sc.nextLine();
+
+        if (!taskMap.containsKey(currentDate) || taskMap.get(currentDate).isEmpty()) {
+            System.out.println("No tasks to move.");
+            return;
+        }
+
+        taskMap.putIfAbsent(toDate, new ArrayList<>());
+        ArrayList<Task> fromTasks = taskMap.get(currentDate);
+        ArrayList<Task> toTasks = taskMap.get(toDate);
+
+        for (Task t : fromTasks) {
+            if (!t.done) {
+                toTasks.add(new Task(t.description, t.important));
+            }
+        }
+        System.out.println("Pending tasks moved from " + currentDate + " to " + toDate);
+    }
+
+    static void changeDate() {
+        System.out.print("Enter new current date (YYYY-MM-DD): ");
+        currentDate = sc.nextLine();
+        System.out.println("Now working with date: " + currentDate);
+    }
+
+    static void viewAllDates() {
+        if (taskMap.isEmpty()) {
+            System.out.println("No tasks recorded yet.");
+            return;
+        }
+
+        System.out.println("=== All Dates & Tasks ===");
+        for (String date : taskMap.keySet()) {
+            System.out.println("Date: " + date);
+            ArrayList<Task> tasks = taskMap.get(date);
+            for (int i = 0; i < tasks.size(); i++) {
+                System.out.println("  " + (i+1) + ". " + tasks.get(i));
+            }
+            System.out.println();
+        }
+    }
+}
